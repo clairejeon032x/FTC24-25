@@ -72,7 +72,7 @@ public class RobotTeleopTank_Iterative extends OpMode{
 
         // Define and initialize ALL installed servos.
         CLAW  = hardwareMap.get(Servo.class, "claw");
-        armUp = hardwareMap.get(Servo.class, "armUp");
+        armUp = hardwareMap.get(Servo.class, "armUp");5
         CLAW.setPosition(MID_SERVO);
         armUp.setPosition(MID_SERVO);
 
@@ -98,6 +98,12 @@ public class RobotTeleopTank_Iterative extends OpMode{
     /*
      * Code to run REPEATEDLY after the driver hits START but before they hit STOP
      */
+    public void loop() {
+        CLAW.setPosition(0);
+    }
+
+    
+    """
     @Override
     public void loop() {
         double left;
@@ -146,3 +152,7 @@ public class RobotTeleopTank_Iterative extends OpMode{
         else{
             leftArm.setPower(-0);
             rightArm.setPower(-0);
+        }
+    }
+}
+"""
