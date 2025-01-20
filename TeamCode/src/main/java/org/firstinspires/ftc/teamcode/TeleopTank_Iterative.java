@@ -1,3 +1,4 @@
+"""
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -43,7 +44,7 @@ public class RobotTeleopTank_Iterative extends OpMode{
     public static final double ARM_DOWN_POWER  = -0.25 ;   // Run arm motor down at -25% power
 
     /*
-     * Code to run ONCE when the driver hits INIT
+     * Code to run ONCE when the driver hits INIT 
      */
     @Override
     public void init() {
@@ -98,12 +99,7 @@ public class RobotTeleopTank_Iterative extends OpMode{
     /*
      * Code to run REPEATEDLY after the driver hits START but before they hit STOP
      */
-    public void loop() {
-        CLAW.setPosition(0);
-    }
-
     
-    """
     @Override
     public void loop() {
         double left;
@@ -156,3 +152,54 @@ public class RobotTeleopTank_Iterative extends OpMode{
     }
 }
 """
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.Servo;
+
+@TeleOp(name="Servo Position Adjuster", group="Robot")
+public class ServoPositionAdjuster extends OpMode {
+
+    public Servo testServo = null;
+
+    @Override
+    public void init() {
+        // Initialize the servo
+        testServo = hardwareMap.get(Servo.class, "testServo");
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+    }
+
+    @Override
+    public void start() {
+        // servo --> extreme left
+        testServo.setPosition(0.0);
+        sleep(1000); // Allow time for the servo to reach position
+
+        // servo --> extreme right
+        testServo.setPosition(1.0);
+        sleep(1000); // Allow time for the servo to reach position
+
+        // calc middle position and set servo to it
+        double middlePosition = 0.5; // (0.0 + 1.0) / 2
+        testServo.setPosition(middlePosition);
+        telemetry.addData("Middle Position Set", middlePosition);
+        telemetry.update();
+    }
+
+    @Override
+    public void loop() {
+        
+    }
+
+    // simulate a delay
+    private void sleep(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
