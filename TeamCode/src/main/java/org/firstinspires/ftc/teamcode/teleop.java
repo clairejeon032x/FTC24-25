@@ -33,16 +33,17 @@ public class teleop extends OpMode {
     // Servo positions (adjusted values)
 
     public float rightArmPos = 0.00f;
-    public float CLAWOpen = 0.00f;
+    public float CLAWOpen = 0.400f;
     public float CLAWClose = 0.00f;
     public float armRightPos = 0.00f;
+
+    public boolean isclawopen=false;
 
 
     private double derivativeFilterAlpha = 0.1; // Filter coefficient (0 < alpha < 1)
 
     private double lastTime;
 
-    public boolean robothandisopen = false;
     //@Override
     public void runOpMode() throws InterruptedException {
 
@@ -65,7 +66,7 @@ public class teleop extends OpMode {
         rightArm = robot.rightArmServo;
         leftArm = robot.leftArmServo;
 
-        CLAW.setPosition(CLAWOpen);
+        CLAW.setPosition(CLAWClose);
     }
 
     //@Override
@@ -85,20 +86,39 @@ public class teleop extends OpMode {
         double leftStickX = -gamepad1.left_stick_x;
         double rightStickX = -gamepad1.right_stick_x;
 
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(theta), 1);
+        double denominator = Math.max(Math.abs(leftStickY) + Math.abs(leftStickX) + Math.abs(rightStickX), 1);
         double leftFrontPower = (leftStickY + leftStickX + rightStickX) / denominator;
         double leftBackPower = (leftStickY - leftStickX + rightStickX) / denominator;
         double rightFrontPower = (leftStickY - leftStickX - rightStickX) / denominator;
         double rightBackPower = (leftStickY + leftStickX - rightStickX) / denominator;
 
-        leftFront.setPower(leftFrontPower);
-        leftBack.setPower(leftBackPower);
-        rightFront.setPower(rightFrontPower);
-        rightBack.setPower(rightBackPower);
+        frontLeft.setPower(leftFrontPower);
+        backLeft.setPower(leftBackPower);
+        frontRight.setPower(rightFrontPower);
+        backRight.setPower(rightBackPower);
 
+        if (xButtonJustPressed){
+            if(isclawopen){
+                CLAW.setPosition(CLAWClose);
+            }
+            else{
+                CLAW.setPosition(CLAWOpen);
+            }
+        }
+
+        if(yButtonJustPressed){
+            rightArm.setPosition(0.3);
+            leftArm.setPosition(0.3);
+        }
+        if(aButtonJustPressed){
+            rightArm.setPosition(0);
+            leftArm.setPosition(0);
+        }
 
         //servo 0
-
+        if (gamepad1.a) {
+        CLAW.setPosition(0.00);
+        }
     }
 
     // PIDController class

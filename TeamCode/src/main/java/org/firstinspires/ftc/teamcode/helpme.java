@@ -35,8 +35,8 @@ public class helpme extends OpMode {
     }
     public void loop(){
         if(gamepad1.a){
-            rightArm.setPosition(0.5);
-            leftArm.setPosition(0.5);
+            rightArm.setPosition(0.3);
+            leftArm.setPosition(0.3);
         }
         if(gamepad1.b){
             rightArm.setPosition(1);
