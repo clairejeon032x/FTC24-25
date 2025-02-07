@@ -42,6 +42,7 @@ public class teleop extends OpMode {
 
     private double lastTime;
 
+    public boolean robothandisopen = false;
     //@Override
     public void runOpMode() throws InterruptedException {
 
@@ -63,6 +64,8 @@ public class teleop extends OpMode {
 
         rightArm = robot.rightArmServo;
         leftArm = robot.leftArmServo;
+
+        CLAW.setPosition(CLAWOpen);
     }
 
     //@Override
@@ -81,10 +84,21 @@ public class teleop extends OpMode {
         double leftStickY = -gamepad1.left_stick_y;
         double leftStickX = -gamepad1.left_stick_x;
         double rightStickX = -gamepad1.right_stick_x;
+
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(theta), 1);
+        double leftFrontPower = (leftStickY + leftStickX + rightStickX) / denominator;
+        double leftBackPower = (leftStickY - leftStickX + rightStickX) / denominator;
+        double rightFrontPower = (leftStickY - leftStickX - rightStickX) / denominator;
+        double rightBackPower = (leftStickY + leftStickX - rightStickX) / denominator;
+
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
+
+
         //servo 0
-        if (gamepad1.a) {
-        CLAW.setPosition(0.00);
-        }
+
     }
 
     // PIDController class
