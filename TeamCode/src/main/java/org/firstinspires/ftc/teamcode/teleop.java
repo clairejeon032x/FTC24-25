@@ -1,94 +1,137 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
-/*
- * This file contains an example of a Linear "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When a selection is made from the menu, the corresponding OpMode is executed.
- *
- * This particular OpMode illustrates driving a 4-motor Omni-Directional (or Holonomic) robot.
- * This code will work with either a Mecanum-Drive or an X-Drive train.
- * Both of these drives are illustrated at https://gm0.org/en/latest/docs/robot-design/drivetrains/holonomic.html
- * Note that a Mecanum drive must display an X roller-pattern when viewed from above.
- *
- * Also note that it is critical to set the correct rotation direction for each motor.  See details below.
- *
- * Holonomic drives provide the ability for the robot to move in three axes (directions) simultaneously.
- * Each motion axis is controlled by one Joystick axis.
- *
- * 1) Axial:    Driving forward and backward               Left-joystick Forward/Backward
- * 2) Lateral:  Strafing right and left                     Left-joystick Right and Left
- * 3) Yaw:      Rotating Clockwise and counter clockwise    Right-joystick Right and Left
- *
- * This code is written assuming that the right-side motors need to be reversed for the robot to drive forward.
- * When you first test your robot, if it moves backward when you push the left stick forward, then you must flip
- * the direction of all 4 motors (see code below).
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- */
-
-@TeleOp(name="TeleOP", group="Linear OpMode")
-public class teleop extends LinearOpMode {
+@TeleOp(name="TeleOP", group="OpMode")
+public class teleop extends OpMode {
 
     // Declare OpMode members for each of the 4 motors.
-    private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftFrontDrive = null;
-    private DcMotor leftBackDrive = null;
-    private DcMotor rightFrontDrive = null;
-    private DcMotor rightBackDrive = null;
+    // Servo and motor declarations
+    public Servo CLAW;
+    public Servo rightArm;
+    public Servo leftArm;
+    public DcMotorEx liftLeft;
+    public DcMotorEx liftRight;
+    public DcMotorEx frontLeft;
+    public DcMotorEx frontRight;
+    public DcMotorEx backLeft;
+    public DcMotorEx backRight;
+//    public Drivetrain drivetrain;
+    // Track button states
+    public boolean currentAButton;
+    public boolean previousAButton = false;
+    public boolean currentXButton;
+    public boolean previousXButton = false;
+    public boolean currentYButton;
+    public boolean previousYButton = false;
+
+    // Servo positions (adjusted values)
+
+    public float rightArmPos = 0.00f;
+    public float CLAWOpen = 0.00f;
+    public float CLAWClose = 0.00f;
+    public float armRightPos = 0.00f;
+
+
+    private double derivativeFilterAlpha = 0.1; // Filter coefficient (0 < alpha < 1)
+
+    private double lastTime;
+
+    //@Override
+    public void runOpMode() throws InterruptedException {
+
+    }
 
     @Override
-    public void runOpMode() {
+    public void init() {
+        Robot robot = new Robot(hardwareMap);
 
-        // Initialize the hardware variables. Note that the strings used here must correspond
-        // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFrontDrive  = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBackDrive  = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "rightBack");
+        frontLeft = robot.frontLeft;
+        frontRight = robot.frontRight;
+        backLeft = robot.backLeft;
+        backRight = robot.backRight;
 
-        // ########################################################################################
-        // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
-        // ########################################################################################
-        // Most robots need the motors on one side to be reversed to drive forward.
-        // The motor reversals shown here are for a "direct drive" robot (the wheels turn the same direction as the motor shaft)
-        // If your robot has additional gear reductions or uses a right-angled drive, it's important to ensure
-        // that your motors are turning in the correct direction.  So, start out with the reversals here, BUT
-        // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
-        // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
-        // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
-        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        liftRight = robot.liftRight;
+        liftLeft = robot.liftLeft;
 
-        // Wait for the game to start (driver presses START)
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
+        CLAW = robot.CLAW;
 
-        waitForStart();
-        runtime.reset();
+        rightArm = robot.rightArmServo;
+        leftArm = robot.leftArmServo;
+    }
 
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+    //@Override
+    public void loop() {
+        // update button states
+        currentAButton = gamepad1.a;
+        boolean aButtonJustPressed = currentAButton && !previousAButton;
 
-            double fb = -gamepad1.left_stick_y;
-            double lr = gamepad1.left_stick_x;
+        currentXButton = gamepad1.x;
+        boolean xButtonJustPressed = currentXButton && !previousXButton;
 
+        currentYButton = gamepad1.y;
+        boolean yButtonJustPressed = currentYButton && !previousYButton;
 
-            // Send calculated power to wheels
-            leftFrontDrive.setPower(fb + lr);
-            rightFrontDrive.setPower(fb -lr);
-            leftBackDrive.setPower(fb + lr);
-            rightBackDrive.setPower(fb-lr);
-
+        // drive
+        double leftStickY = -gamepad1.left_stick_y;
+        double leftStickX = -gamepad1.left_stick_x;
+        double rightStickX = -gamepad1.right_stick_x;
+        //servo 0
+        if (gamepad1.a) {
+        CLAW.setPosition(0.00);
         }
-    }}
+    }
+
+    // PIDController class
+    public class PIDController {
+        private double kP, kI, kD;
+        private double setpoint;
+        private double integral;
+        private double previousError;
+        private double outputMin, outputMax;
+
+        private double derivativeFilterAlpha;
+        private double filteredDerivative;
+
+        public PIDController(double kP, double kI, double kD, double outputMin, double outputMax, double derivativeFilterAlpha) {
+            this.kP = kP;
+            this.kI = kI;
+            this.kD = kD; // Set to 0 if using filtered derivative
+            this.outputMin = outputMin;
+            this.outputMax = outputMax;
+            this.derivativeFilterAlpha = derivativeFilterAlpha;
+            integral = 0;
+            previousError = 0;
+            filteredDerivative = 0;
+        }
+
+        public void setSetpoint(double setpoint) {
+            this.setpoint = setpoint;
+        }
+
+        public double update(double current, double deltaTime) {
+            double error = setpoint - current;
+            integral += error * deltaTime;
+
+// Calculate raw derivative
+            double derivative = (error - previousError) / deltaTime;
+
+// Apply low-pass filter to derivative
+            filteredDerivative = derivativeFilterAlpha * derivative + (1 - derivativeFilterAlpha) * filteredDerivative;
+
+            previousError = error;
+
+// Compute PID output using filtered derivative
+            double output = kP * error + kI * integral + kD * filteredDerivative;
+            output = Math.max(outputMin, Math.min(outputMax, output)); // Clamping the output
+
+            return output;
+        }
+    }
+
+}
