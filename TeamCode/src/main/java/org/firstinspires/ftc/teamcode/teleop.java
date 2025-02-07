@@ -33,13 +33,17 @@ public class teleop extends OpMode {
     // Servo positions (adjusted values)
 
     public float rightArmPos = 0.00f;
-    public float CLAWOpen = 0.400f;
+    public float CLAWOpen = 1.0f;
     public float CLAWClose = 0.00f;
     public float armRightPos = 0.00f;
 
     public boolean isclawopen=false;
 
+    private enum ClawState {
+        OPEN, CLOSED
+    }
 
+    ClawState clawState=ClawState.CLOSED;
     private double derivativeFilterAlpha = 0.1; // Filter coefficient (0 < alpha < 1)
 
     private double lastTime;
@@ -67,6 +71,10 @@ public class teleop extends OpMode {
         leftArm = robot.leftArmServo;
 
         CLAW.setPosition(CLAWClose);
+        rightArm.setPosition(0);
+        leftArm.setPosition(1);
+
+
     }
 
     //@Override
@@ -75,18 +83,26 @@ public class teleop extends OpMode {
         currentAButton = gamepad1.a;
         boolean aButtonJustPressed = currentAButton && !previousAButton;
 
-        currentXButton = gamepad1.x;
+        boolean currentXButton = gamepad1.x;
         boolean xButtonJustPressed = currentXButton && !previousXButton;
+        boolean lastButtonState = false;
+
+
+
 
         currentYButton = gamepad1.y;
         boolean yButtonJustPressed = currentYButton && !previousYButton;
 
         // drive
         double leftStickY = -gamepad1.left_stick_y;
-        double leftStickX = -gamepad1.left_stick_x;
+        double leftStickX = gamepad1.left_stick_x;
         double rightStickX = -gamepad1.right_stick_x;
 
-        double denominator = Math.max(Math.abs(leftStickY) + Math.abs(leftStickX) + Math.abs(rightStickX), 1);
+        telemetry.addData("leftStickY", leftStickY);
+        telemetry.addData("leftStickX", leftStickX);
+        telemetry.addData("rightStickX", rightStickX);
+
+        double denominator = Math.max(Math.abs(leftStickY) + Math.abs(leftStickX) + Math.abs(rightStickX), 0.3);
         double leftFrontPower = (leftStickY + leftStickX + rightStickX) / denominator;
         double leftBackPower = (leftStickY - leftStickX + rightStickX) / denominator;
         double rightFrontPower = (leftStickY - leftStickX - rightStickX) / denominator;
@@ -97,28 +113,45 @@ public class teleop extends OpMode {
         frontRight.setPower(rightFrontPower);
         backRight.setPower(rightBackPower);
 
+        telemetry.addData("leftFrontPower", leftFrontPower);
+        telemetry.addData("leftBackPower", leftBackPower);
+        telemetry.addData("rightFrontPower", rightFrontPower);
+        telemetry.addData("rightBackPower", rightBackPower);
+
         if (xButtonJustPressed){
-            if(isclawopen){
-                CLAW.setPosition(CLAWClose);
-            }
-            else{
-                CLAW.setPosition(CLAWOpen);
+            switch(clawState){
+                case CLOSED:
+                    CLAW.setPosition(CLAWOpen);
+                    clawState = ClawState.OPEN;
+                    break;
+                case OPEN:
+                    CLAW.setPosition(CLAWClose);
+                    clawState = ClawState.CLOSED;
+                    break;
             }
         }
+        else{
+            previousXButton=false;
+        }
+
 
         if(yButtonJustPressed){
-            rightArm.setPosition(0.3);
-            leftArm.setPosition(0.3);
+            rightArm.setPosition(0.2);
+            leftArm.setPosition(0.8);
+            previousYButton=true;
+        }
+        else{
+            previousYButton=false;
         }
         if(aButtonJustPressed){
             rightArm.setPosition(0);
-            leftArm.setPosition(0);
+            leftArm.setPosition(1);
         }
 
         //servo 0
-        if (gamepad1.a) {
-        CLAW.setPosition(0.00);
-        }
+
+        telemetry.addData("CLAW", CLAW.getPosition());
+        telemetry.update();
     }
 
     // PIDController class
@@ -131,6 +164,7 @@ public class teleop extends OpMode {
 
         private double derivativeFilterAlpha;
         private double filteredDerivative;
+
 
         public PIDController(double kP, double kI, double kD, double outputMin, double outputMax, double derivativeFilterAlpha) {
             this.kP = kP;
