@@ -130,24 +130,25 @@ public class teleop extends OpMode {
                     break;
             }
         }
-        else{
+        else if(!currentXButton && previousXButton){
             previousXButton=false;
         }
-
 
         if(yButtonJustPressed){
             rightArm.setPosition(0.2);
             leftArm.setPosition(0.8);
             previousYButton=true;
         }
-        else{
+        else if(!currentYButton && previousYButton){
             previousYButton=false;
         }
         if(aButtonJustPressed){
             rightArm.setPosition(0);
             leftArm.setPosition(1);
         }
-
+        else if(!currentXButton && previousXButton){
+            previousXButton=false;
+        }
         //servo 0
 
         telemetry.addData("CLAW", CLAW.getPosition());
