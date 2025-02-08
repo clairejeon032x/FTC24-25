@@ -1,205 +1,127 @@
-
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name="TeleOP", group="OpMode")
-public class teleop extends OpMode {
 
-    // Declare OpMode members for each of the 4 motors.
-    // Servo and motor declarations
-    public Servo CLAW;
-    public Servo rightArm;
-    public Servo leftArm;
-    public DcMotorEx liftLeft;
-    public DcMotorEx liftRight;
-    public DcMotorEx frontLeft;
-    public DcMotorEx frontRight;
-    public DcMotorEx backLeft;
-    public DcMotorEx backRight;
-//    public Drivetrain drivetrain;
-    // Track button states
-    public boolean currentAButton;
-    public boolean previousAButton = false;
-    public boolean currentXButton;
-    public boolean previousXButton = false;
-    public boolean currentYButton;
-    public boolean previousYButton = false;
+@TeleOp(name="teleop", group="Linear OpMode")
 
-    // Servo positions (adjusted values)
-
-    public float rightArmPos = 0.00f;
-    public float CLAWOpen = 1.0f;
-    public float CLAWClose = 0.00f;
-    public float armRightPos = 0.00f;
-
-    public boolean isclawopen=false;
-
-    private enum ClawState {
-        OPEN, CLOSED
-    }
-
-    ClawState clawState=ClawState.CLOSED;
-    private double derivativeFilterAlpha = 0.1; // Filter coefficient (0 < alpha < 1)
-
-    private double lastTime;
-
-    //@Override
-    public void runOpMode() throws InterruptedException {
-
-    }
+public class teleop extends LinearOpMode {
+    public RobotHardware robot = new RobotHardware(this);
 
     @Override
-    public void init() {
-        Robot robot = new Robot(hardwareMap);
+    public void runOpMode() {
+        robot.init(hardwareMap);
+        double leftFront, rightFront, leftBack, rightBack, larm, rarm, clawPos, climb;
+        boolean aButtonJustPressed, xButtonJustPressed, yButtonJustPressed;
 
-        frontLeft = robot.frontLeft;
-        frontRight = robot.frontRight;
-        backLeft = robot.backLeft;
-        backRight = robot.backRight;
+        double strafe_k = 0.19;
+        double turn_k = 0.25;
+        double straight_k = 0.1;
+        double x, y, turn, theta, power,sin,cos,max;
 
-        liftRight = robot.liftRight;
-        liftLeft = robot.liftLeft;
+        boolean grab;
+        grab = true;
+        int grabInt = 0;
+        robot.Claw.setPosition(0.58);
 
-        CLAW = robot.CLAW;
+        Gamepad currentGamepad = new Gamepad();
+        Gamepad previousGamepad = new Gamepad();
+        waitForStart();
+        robot.resetHeading();
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            currentGamepad = gamepad1;
 
-        rightArm = robot.rightArmServo;
-        leftArm = robot.leftArmServo;
+            aButtonJustPressed = currentGamepad.a && !previousGamepad.a;
+            xButtonJustPressed = currentGamepad.x && !previousGamepad.x;
+            yButtonJustPressed = currentGamepad.y && !previousGamepad.y;
 
-        CLAW.setPosition(CLAWClose);
-        rightArm.setPosition(0);
-        leftArm.setPosition(1);
+            /*** Mechanum Drive ***/
 
-
-    }
-
-    //@Override
-    public void loop() {
-        // update button states
-        currentAButton = gamepad1.a;
-        boolean aButtonJustPressed = currentAButton && !previousAButton;
-
-        boolean currentXButton = gamepad1.x;
-        boolean xButtonJustPressed = currentXButton && !previousXButton;
-        boolean lastButtonState = false;
-
+            y = -gamepad1.left_stick_y;
+            x = gamepad1.left_stick_x;
+            turn = gamepad1.right_stick_x;
+            robot.drive(x,y,turn,true);
 
 
 
-        currentYButton = gamepad1.y;
-        boolean yButtonJustPressed = currentYButton && !previousYButton;
+            //claw close 0.41
+            //claw open 0.58
 
-        // drive
-        double leftStickY = -gamepad1.left_stick_y;
-        double leftStickX = gamepad1.left_stick_x;
-        double rightStickX = -gamepad1.right_stick_x;
 
-        telemetry.addData("leftStickY", leftStickY);
-        telemetry.addData("leftStickX", leftStickX);
-        telemetry.addData("rightStickX", rightStickX);
 
-        double denominator = Math.max(Math.abs(leftStickY) + Math.abs(leftStickX) + Math.abs(rightStickX), 0.3);
-        double leftFrontPower = (leftStickY + leftStickX + rightStickX) / denominator;
-        double leftBackPower = (leftStickY - leftStickX + rightStickX) / denominator;
-        double rightFrontPower = (leftStickY - leftStickX - rightStickX) / denominator;
-        double rightBackPower = (leftStickY + leftStickX - rightStickX) / denominator;
+            if (currentGamepad.a && !previousGamepad.a){
+                grabInt += 1;
+                grabInt = grabInt % 2;
 
-        frontLeft.setPower(leftFrontPower);
-        backLeft.setPower(leftBackPower);
-        frontRight.setPower(rightFrontPower);
-        backRight.setPower(rightBackPower);
-
-        telemetry.addData("leftFrontPower", leftFrontPower);
-        telemetry.addData("leftBackPower", leftBackPower);
-        telemetry.addData("rightFrontPower", rightFrontPower);
-        telemetry.addData("rightBackPower", rightBackPower);
-
-        if (xButtonJustPressed){
-            switch(clawState){
-                case CLOSED:
-                    CLAW.setPosition(CLAWOpen);
-                    clawState = ClawState.OPEN;
-                    break;
-                case OPEN:
-                    CLAW.setPosition(CLAWClose);
-                    clawState = ClawState.CLOSED;
-                    break;
             }
-        }
-        else if(!currentXButton && previousXButton){
-            previousXButton=false;
-        }
 
-        if(yButtonJustPressed){
-            rightArm.setPosition(0.2);
-            leftArm.setPosition(0.8);
-            previousYButton=true;
-        }
-        else if(!currentYButton && previousYButton){
-            previousYButton=false;
-        }
-        if(aButtonJustPressed){
-            rightArm.setPosition(0);
-            leftArm.setPosition(1);
-        }
-        else if(!currentXButton && previousXButton){
-            previousXButton=false;
-        }
-        //servo 0
+            if (gamepad1.a){
+                robot.Claw.setPosition(0.41);
+            } else {
+                robot.Claw.setPosition(0.58);
+            }
 
-        telemetry.addData("CLAW", CLAW.getPosition());
-        telemetry.update();
-    }
+            if (gamepad1.left_bumper){
 
-    // PIDController class
-    public class PIDController {
-        private double kP, kI, kD;
-        private double setpoint;
-        private double integral;
-        private double previousError;
-        private double outputMin, outputMax;
-
-        private double derivativeFilterAlpha;
-        private double filteredDerivative;
+                larm = 0.01;
+                rarm = 0.01;
+            } else {
+                larm = 0.32;
+                rarm = 0.32;
+            }
 
 
-        public PIDController(double kP, double kI, double kD, double outputMin, double outputMax, double derivativeFilterAlpha) {
-            this.kP = kP;
-            this.kI = kI;
-            this.kD = kD; // Set to 0 if using filtered derivative
-            this.outputMin = outputMin;
-            this.outputMax = outputMax;
-            this.derivativeFilterAlpha = derivativeFilterAlpha;
-            integral = 0;
-            previousError = 0;
-            filteredDerivative = 0;
-        }
+            if (gamepad1.right_trigger>0.01){
+                robot.liftLeft.setPower(gamepad1.right_trigger);
+                robot.liftRight.setPower(gamepad1.right_trigger);
+            }
+            else if (gamepad1.right_bumper){
+                robot.liftLeft.setPower(-0.4);
+                robot.liftRight.setPower(-0.4);
 
-        public void setSetpoint(double setpoint) {
-            this.setpoint = setpoint;
-        }
+            }else {
+                robot.liftLeft.setPower(0);
+                robot.liftRight.setPower(0);
+            }
 
-        public double update(double current, double deltaTime) {
-            double error = setpoint - current;
-            integral += error * deltaTime;
 
-// Calculate raw derivative
-            double derivative = (error - previousError) / deltaTime;
 
-// Apply low-pass filter to derivative
-            filteredDerivative = derivativeFilterAlpha * derivative + (1 - derivativeFilterAlpha) * filteredDerivative;
+            // larm = gamepad1.left_trigger;
+            // rarm = gamepad1.left_trigger;
+            robot.leftArmServo.setPosition(larm);
+            robot.rightArmServo.setPosition(rarm);
 
-            previousError = error;
+            if(gamepad1.dpad_up){
+                robot.climbMotor.setPower(0.5);
+            }
+            else if(gamepad1.dpad_down){
+                robot.climbMotor.setPower(-0.5);
+            }
+            else{
+                robot.climbMotor.setPower(0);
+            }
 
-// Compute PID output using filtered derivative
-            double output = kP * error + kI * integral + kD * filteredDerivative;
-            output = Math.max(outputMin, Math.min(outputMax, output)); // Clamping the output
+            previousGamepad = currentGamepad;
+            //open claw 0.58
+            //close claw 0.41
 
-            return output;
+            //minPower = 0.04
+
+
+
+            telemetry.addData("armPosition", gamepad1.left_trigger);
+            telemetry.addData("imu", robot.imu.getRobotYawPitchRollAngles().toString());
+            telemetry.update();
+
         }
     }
 
