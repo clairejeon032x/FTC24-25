@@ -86,6 +86,7 @@ public class RobotHardware {
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP
         )));
+        moveArmup();
     }
 
     public double getHeading() {
@@ -123,10 +124,10 @@ public class RobotHardware {
             rightBack  /= (power + Math.abs(turn));
         }
 
-        frontLeft.setPower(leftFront);
-        backLeft.setPower(leftBack);
-        frontRight.setPower(rightFront);
-        backRight.setPower(rightBack);
+        frontLeft.setPower(leftFront/1.5);
+        backLeft.setPower(leftBack/1.5);
+        frontRight.setPower(rightFront/1.5);
+        backRight.setPower(rightBack/1.5);
         telemetry.addData("leftFront",leftFront);
         telemetry.addData("rightFront",rightFront);
         telemetry.addData("leftBack",leftBack);
@@ -212,6 +213,19 @@ public class RobotHardware {
             drive_power(x, y, turn);
         }
         stopDrive();
+    }
+
+    public void moveArm(double position) {
+        leftArmServo.setPosition(position);
+        rightArmServo.setPosition(position);
+    }
+
+    public void moveArmup() {
+        moveArm(0.3);
+    }
+
+    public void moveArmdown() {
+        moveArm(0.01);
     }
 
 }

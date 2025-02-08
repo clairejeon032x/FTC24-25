@@ -48,9 +48,9 @@ public class teleop extends LinearOpMode {
 
             /*** Mechanum Drive ***/
 
-            y = -Math.pow(gamepad1.left_stick_y,1.5);
-            x = Math.pow(gamepad1.left_stick_x,1.5);
-            turn = Math.pow(gamepad1.right_stick_x,1.5);
+            y = -Math.copySign(Math.pow(Math.abs(gamepad1.left_stick_y), 2), gamepad1.left_stick_y);
+            x = Math.copySign(Math.pow(Math.abs(gamepad1.left_stick_x), 2), gamepad1.left_stick_x);
+            turn = Math.copySign(Math.pow(Math.abs(gamepad1.right_stick_x), 2), gamepad1.right_stick_x);
             robot.drive(x,y,turn,false);
 
 
@@ -74,11 +74,9 @@ public class teleop extends LinearOpMode {
 
             if (gamepad1.left_bumper){
 
-                larm = 0.01;
-                rarm = 0.01;
+                robot.moveArmdown();
             } else {
-                larm = 0.30;
-                rarm = 0.30;
+                robot.moveArmup();
             }
 
 
@@ -97,15 +95,16 @@ public class teleop extends LinearOpMode {
 
 
 
+
             // larm = gamepad1.left_trigger;
             // rarm = gamepad1.left_trigger;
-            robot.leftArmServo.setPosition(larm);
-            robot.rightArmServo.setPosition(rarm);
+//            robot.leftArmServo.setPosition(larm);
+//            robot.rightArmServo.setPosition(rarm);
 
-            if(gamepad1.dpad_up){
+            if(gamepad2.dpad_up){
                 robot.climbMotor.setPower(0.5);
             }
-            else if(gamepad1.dpad_down){
+            else if(gamepad2.dpad_down){
                 robot.climbMotor.setPower(-0.5);
             }
             else{
