@@ -36,6 +36,8 @@ public class teleop extends LinearOpMode {
         Gamepad previousGamepad = new Gamepad();
         waitForStart();
         robot.resetHeading();
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             currentGamepad = gamepad1;
