@@ -48,10 +48,10 @@ public class teleop extends LinearOpMode {
 
             /*** Mechanum Drive ***/
 
-            y = -gamepad1.left_stick_y;
-            x = gamepad1.left_stick_x;
-            turn = gamepad1.right_stick_x;
-            robot.drive(x,y,turn,true);
+            y = -Math.pow(gamepad1.left_stick_y,1.5);
+            x = Math.pow(gamepad1.left_stick_x,1.5);
+            turn = Math.pow(gamepad1.right_stick_x,1.5);
+            robot.drive(x,y,turn,false);
 
 
 
@@ -67,9 +67,9 @@ public class teleop extends LinearOpMode {
             }
 
             if (gamepad1.a){
-                robot.Claw.setPosition(0.41);
+                robot.Claw.setPosition(0.8);
             } else {
-                robot.Claw.setPosition(0.58);
+                robot.Claw.setPosition(0.6);
             }
 
             if (gamepad1.left_bumper){
@@ -77,22 +77,22 @@ public class teleop extends LinearOpMode {
                 larm = 0.01;
                 rarm = 0.01;
             } else {
-                larm = 0.32;
-                rarm = 0.32;
+                larm = 0.30;
+                rarm = 0.30;
             }
 
 
             if (gamepad1.right_trigger>0.01){
-                robot.liftLeft.setPower(gamepad1.right_trigger);
-                robot.liftRight.setPower(gamepad1.right_trigger);
+                robot.liftLeft.setPower(gamepad1.right_trigger/3);
+                robot.liftRight.setPower(gamepad1.right_trigger/3);
             }
             else if (gamepad1.right_bumper){
-                robot.liftLeft.setPower(-0.4);
-                robot.liftRight.setPower(-0.4);
+                robot.liftLeft.setPower(-0.2);
+                robot.liftRight.setPower(-0.2);
 
             }else {
-                robot.liftLeft.setPower(0);
-                robot.liftRight.setPower(0);
+                robot.liftLeft.setPower(0.1);
+                robot.liftRight.setPower(0.1);
             }
 
 

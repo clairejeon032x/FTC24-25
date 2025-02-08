@@ -64,13 +64,14 @@ public class RobotHardware {
         liftLeft  = hardwareMap.get(DcMotorEx.class, "liftLeft");
         liftRight = hardwareMap.get(DcMotorEx.class, "liftRight");
 
-        liftLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        liftRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        liftLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        liftRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         liftLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         Claw = hardwareMap.get(Servo.class, "intakeServo");
+        Claw.setDirection(Servo.Direction.REVERSE);
 
         leftArmServo  = hardwareMap.get(Servo.class, "leftArmServo");
         rightArmServo = hardwareMap.get(Servo.class, "rightArmServo");
@@ -126,18 +127,19 @@ public class RobotHardware {
         backLeft.setPower(leftBack);
         frontRight.setPower(rightFront);
         backRight.setPower(rightBack);
+        telemetry.addData("leftFront",leftFront);
+        telemetry.addData("rightFront",rightFront);
+        telemetry.addData("leftBack",leftBack);
+        telemetry.addData("rightBack",rightBack);
     }
 
     /**
      * PID controller that computes a control output for a given error.
      *
      * @param error the current error
-     * @param kP    proportional constant
-     * @param kI    integral constant
-     * @param kD    derivative constant
      * @return the computed PID output for turning
      */
-    private double pidControl(double error, double kP, double kI, double kD) {
+    private double pidControl(double error) {
         // Accumulate the error for the integral term.
         errorSum += error;
 
@@ -173,7 +175,7 @@ public class RobotHardware {
             }
 
             // Use full PID to compute the turn value from the error.
-            turn = (pidControl(error, kP, kI, kD)*-1)/100;
+            turn = (pidControl(error)*-1)/100;
         } else {
             // If a turning command is provided, use that input and update target heading.
             turn = turnInput;
