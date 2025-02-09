@@ -124,10 +124,10 @@ public class RobotHardware {
             rightBack  /= (power + Math.abs(turn));
         }
 
-        frontLeft.setPower(leftFront/1.5);
-        backLeft.setPower(leftBack/1.5);
-        frontRight.setPower(rightFront/1.5);
-        backRight.setPower(rightBack/1.5);
+        frontLeft.setPower(leftFront/1.75);
+        backLeft.setPower(leftBack/1.75);
+        frontRight.setPower(rightFront/1.75);
+        backRight.setPower(rightBack/1.75);
         telemetry.addData("leftFront",leftFront);
         telemetry.addData("rightFront",rightFront);
         telemetry.addData("leftBack",leftBack);
@@ -225,7 +225,7 @@ public class RobotHardware {
     }
 
     public void moveArmdown() {
-        moveArm(0.01);
+        moveArm(0);
     }
 
 }

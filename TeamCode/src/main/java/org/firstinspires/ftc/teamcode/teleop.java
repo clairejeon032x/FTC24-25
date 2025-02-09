@@ -81,13 +81,12 @@ public class teleop extends LinearOpMode {
 
 
             if (gamepad1.right_trigger>0.01){
-                robot.liftLeft.setPower(gamepad1.right_trigger/3);
-                robot.liftRight.setPower(gamepad1.right_trigger/3);
+                robot.liftLeft.setPower(gamepad1.right_trigger/2.5);
+                robot.liftRight.setPower(gamepad1.right_trigger/2.5);
             }
             else if (gamepad1.right_bumper){
-                robot.liftLeft.setPower(-0.2);
-                robot.liftRight.setPower(-0.2);
-
+                robot.liftLeft.setPower(-0.3);
+                robot.liftRight.setPower(-0.3);
             }else {
                 robot.liftLeft.setPower(0.1);
                 robot.liftRight.setPower(0.1);
@@ -102,10 +101,10 @@ public class teleop extends LinearOpMode {
 //            robot.rightArmServo.setPosition(rarm);
 
             if(gamepad2.dpad_up){
-                robot.climbMotor.setPower(0.5);
+                robot.climbMotor.setPower(1);
             }
             else if(gamepad2.dpad_down){
-                robot.climbMotor.setPower(-0.5);
+                robot.climbMotor.setPower(-0.3);
             }
             else{
                 robot.climbMotor.setPower(0);
